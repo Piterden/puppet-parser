@@ -21,50 +21,53 @@ function run() {
       '--window-size=1600,900',
     ],
     slowMo: 10, // slow down by 250ms
+  }).then((page) => {
+    console.log(page)
+
   })
-  const page = browser.newPage()
+  // const page = browser.newPage()
 
-  page.goto(`${fullURL}/library`)
+  // page.goto(`${fullURL}/library`)
 
-  // login by cookies disabled for now
-  if (!loginWithCookie) {
-    // login by entering login details
-    console.log('logging in by entering login details')
-    page.goto(`${fullURL}/login`)
+  // // login by cookies disabled for now
+  // if (!loginWithCookie) {
+  //   // login by entering login details
+  //   console.log('logging in by entering login details')
+  //   page.goto(`${fullURL}/login`)
 
-    page.click($loginButton)
-    page.type($username, username, {delay: 2})
-    page.type($password, password, {delay: 2})
-    page.waitForNavigation()
-  }
-  else {
-    console.log('logging in by setting cookies')
-    // login with cookie
-    page.setCookie({
-      name: 'cfduid',
-      value: 'd3efed6f31efa53af6ce7fd89d7399dca1517129585',
-      domain: `.${domain}`,
-    })
+  //   page.click($loginButton)
+  //   page.type($username, username, {delay: 2})
+  //   page.type($password, password, {delay: 2})
+  //   page.waitForNavigation()
+  // }
+  // else {
+  //   console.log('logging in by setting cookies')
+  //   // login with cookie
+  //   page.setCookie({
+  //     name: 'cfduid',
+  //     value: 'd3efed6f31efa53af6ce7fd89d7399dca1517129585',
+  //     domain: `.${domain}`,
+  //   })
 
-    page.setCookie({
-      name: 'distillery',
-      value: 'efedf10_a405f072-f85f-4bb5-930f-ecd94b47b566-d7d5ad3da-6d31483bfcd5-dd1e',
-      domain: `www.${domain}`,
-    })
+  //   page.setCookie({
+  //     name: 'distillery',
+  //     value: 'efedf10_a405f072-f85f-4bb5-930f-ecd94b47b566-d7d5ad3da-6d31483bfcd5-dd1e',
+  //     domain: `www.${domain}`,
+  //   })
 
-    page.setCookie({
-      name: '_kjb_session',
-      value: 'c858bbf764670fef23753dab9f05d6c4',
-      domain: `www.${domain}`,
-    })
-  }
+  //   page.setCookie({
+  //     name: '_kjb_session',
+  //     value: 'c858bbf764670fef23753dab9f05d6c4',
+  //     domain: `www.${domain}`,
+  //   })
+  // }
 
-  // process main tabs from library page
-  page.goto(`${fullURL}/library`)
+  // // process main tabs from library page
+  // page.goto(`${fullURL}/library`)
 
-  const elements = page.$$('.panel') // <Array<ElementHandle>>
+  // const elements = page.$$('.panel') // <Array<ElementHandle>>
 
-  console.log(`found ${elements.length} main tabs to process`)
+  // console.log(`found ${elements.length} main tabs to process`)
 }
 
 run()
