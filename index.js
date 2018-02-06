@@ -8,24 +8,29 @@ const username = 'rory@vidapp.com'
 const password = 'Victor1234'
 const domain = 'nakmuaynation.com'
 const fullURL = `http://www.${domain}`
-// const appid = 'NakMuay'
-const loginWithCookie = false
-// const collections = []
-// const videos = []
-
+const userAgents = [
+  'Mozilla/5.0 (Windows NT 10.0 Win64 x64)',
+  'AppleWebKit/537.36 (KHTML, like Gecko)',
+  'Chrome/63.0.3239.132',
+  'Safari/537.36',
+]
+const windowSize = [1600, 900]
 const launchParams = {
   headless: false,
   args: [
-    '--user-agent=Mozilla/5.0 (Windows NT 10.0 Win64 x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36',
-    '--window-size=1600,900',
+    `--user-agent=${userAgents.join(' ')}`,
+    `--window-size=${windowSize.join(',')}`,
   ],
   slowMo: 10, // slow down by 250ms
 }
+// const appid = 'NakMuay'
+// const loginWithCookie = false
+// const collections = []
+// const videos = []
 
 puppeteer.launch(launchParams).then(async (browser) => {
   const pages = await browser.pages()
 
-  // await pages[0].goto(`${fullURL}/library`)
   await pages[0].goto(`${fullURL}/login`)
   await pages[0].type($username, username, {delay: 2})
   await pages[0].type($password, password, {delay: 2})
