@@ -33,12 +33,14 @@ const userAgents = [
   'Chrome/63.0.3239.132',
   'Safari/537.36',
 ]
-const windowSize = [WINDOW_WIDTH, WINDOW_HEIGHT]
 const fullURL = `http://www.${DOMAIN}`
-const launchParams = {
-  devtools: true,
-  headless: false,
-  args: [`--user-agent=${userAgents.join(' ')}`, `--window-size=${windowSize.join(',')}`],
+const launchConfig = {
+  // devtools: true,
+  headless: true,
+  args: [
+    `--user-agent=${userAgents.join(' ')}`,
+    `--window-size=${WINDOW_WIDTH},${WINDOW_HEIGHT}`,
+  ],
   // slowMo: 10, // slow down by 250ms
 }
 
@@ -81,8 +83,9 @@ const collectionsMapper = async (itemEl) => {
   }
   catch (error) {
     console.log(error)
-    return { link: '' }
   }
+
+  return false
 }
 
 const isPostPage = (link) => link.match(/\/posts\//)
@@ -91,9 +94,9 @@ const parseMedia = async (page, link) => {
   const parentLink = await page.url()
 
   await page.goto(link)
-  const titleEl = await page.$('h1,h2')
 
   try {
+    const titleEl = await page.$('h1,h2')
     const title = await titleEl.getProperty('innerHTML')
 
     videos.push({
@@ -103,13 +106,12 @@ const parseMedia = async (page, link) => {
   catch (error) {
     console.log(error)
   }
-
 }
 
 const parseCollection = async (page, link, { courseIdx, level = 0, childIdx = 0 }) => {
   await page.goto(link)
   const items = await page.$$($courseItemsSelector)
-  const urls = await Promise.all(items.map(collectionsMapper))
+  const urls = await Promise.all(items.map(collectionsMapper).filter(Boolean))
 
   collections.push(urls)
 
@@ -136,7 +138,7 @@ const courseWorker = async (browser, { link }, idx) => {
  *
  * @param {Browser}
  */
-puppeteer.launch(launchParams).then(async (browser) => {
+puppeteer.launch(launchConfig).then(async (browser) => {
   const pages = await browser.pages()
   const initPage = pages[0]
 
