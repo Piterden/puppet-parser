@@ -19,6 +19,7 @@ const $titleEl = '.panel--inline .panel__cell:nth-child(2) h4 a'
 const $descriptionEl = '.panel--inline .panel__cell:nth-child(2) p'
 const $courseWrapperSelector = '.panel.syllabus, .col-md-8.main-col, .category-listings.listings-2'
 const $courseItemsSelector = '.syllabus__item, .panel-body.post-listing, .category-listing'
+const $mediaSelector = ''
 
 /**
  * Launch config
@@ -82,6 +83,10 @@ const courseMapper = async (itemEl) => {
 const isPostPage = (link) => link.match(/\/posts\//)
 
 const parseMedia = async (page, link) => {
+  const [media] = await Promise.all([
+    page.waitForSelector($mediaSelector),
+    page.goto(link),
+  ])
 }
 
 const parseCollection = async (page, link) => {
@@ -92,8 +97,8 @@ const parseCollection = async (page, link) => {
 }
 
 // Object.assign(course, {
-  //   items: await Promise.all(courseItems.map()),
-  // })
+//   items: await Promise.all(courseItems.map()),
+// })
 
 const courseWorker = async (browser, course) => {
   const coursePage = await browser.newPage()
@@ -112,7 +117,6 @@ const courseWorker = async (browser, course) => {
  * @param {Browser}
  */
 puppeteer.launch(launchParams).then(async (browser) => {
-
   const pages = await browser.pages()
   const initPage = pages[0]
 
