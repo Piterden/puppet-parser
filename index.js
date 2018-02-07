@@ -66,7 +66,7 @@ const coursesMapper = async (courseEl) => {
  *
  * @param {ElementHandle} itemEl
  */
-const courseWorker = async (itemEl) => {
+const courseMapper = async (itemEl) => {
   const linkEl = await itemEl.$('a')
   const link = await linkEl.getProperty('href')
   const href = await link.jsonValue()
@@ -76,8 +76,13 @@ const courseWorker = async (itemEl) => {
     coursePage.goto(href),
   ])
 
-  return {}
+  console.log()
 }
+
+
+// Object.assign(course, {
+  //   items: await Promise.all(courseItems.map()),
+  // })
 
 /**
  * Browser start
@@ -85,6 +90,17 @@ const courseWorker = async (itemEl) => {
  * @param {Browser}
  */
 puppeteer.launch(launchParams).then(async (browser) => {
+  const courseWorker = async (course) => {
+    const coursePage = await browser.newPage()
+
+    const [wrapper] = await Promise.all([
+      coursePage.waitForSelector($courseWrapperSelector),
+      coursePage.goto(course.link),
+    ])
+
+    return wrapper
+  }
+
   const pages = await browser.pages()
   const initPage = pages[0]
 
@@ -101,7 +117,8 @@ puppeteer.launch(launchParams).then(async (browser) => {
   const courses = await Promise.all(coursesEls.map(coursesMapper))
 
   for (const course of courses) {
-    await courseWorker(course)
+    const wrapper = await courseWorker(course)
+
+    console.log(wrapper)
   }
-  // await Promise.all(courses.forEach())
 })
