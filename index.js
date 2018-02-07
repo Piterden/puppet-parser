@@ -21,6 +21,9 @@ const $courseWrapperSelector = '.panel.syllabus, .col-md-8.main-col, .category-l
 const $courseItemsSelector = '.syllabus__item, .panel-body.post-listing, .category-listing'
 const $mediaSelector = ''
 
+const videos = []
+let collections = []
+
 /**
  * Launch config
  */
@@ -60,6 +63,7 @@ const coursesMapper = async (courseEl) => {
     title: await title.jsonValue(),
     link: await link.jsonValue(),
     description: await description.jsonValue(),
+    children: [],
   }
 }
 
@@ -74,42 +78,50 @@ const collectionsMapper = async (itemEl) => {
 
   return { link: await link.jsonValue() }
 }
-// const [innerWrapper] = await Promise.all([
-//   coursePage.waitForSelector($courseWrapperSelector),
-//   coursePage.goto(href),
-// ])
 
 const isPostPage = (link) => link.match(/\/posts\//)
 
 const parseMedia = async (page, link) => {
-  console.log('[MEDIA]')
+  const parentLink = await page.url()
+
   await page.goto(link)
+
+  try {
+    const titleEl = await page.$('h1,h2')
+    const title = await titleEl.getProperty('innerHTML')
+
+    videos.push({
+      title: await title.jsonValue(),
+    })
+  }
+  catch (error) {
+    console.log(error)
+  }
 }
 
-const parseCollection = async (page, link) => {
-  console.log('[COLLECTION]')
+const parseCollection = async (page, link, { courseIdx, level = 0, childIdx = 0 }) => {
   await page.goto(link)
-  const collections = await page.$$($courseItemsSelector)
-  const urls = await Promise.all(collections.map(collectionsMapper))
+  const items = await page.$$($courseItemsSelector)
+  const urls = await Promise.all(items.map(collectionsMapper))
+
+  collections.push(urls)
 
   for (const url of urls) {
     if (isPostPage(url.link)) {
       await parseMedia(page, url.link)
     }
     else {
-      await parseCollection(page, url.link)
+      await parseCollection(page, url.link, { courseIdx, level: level + 1 })
     }
   }
 }
 
-const courseWorker = async (browser, { link }) => {
+const courseWorker = async (browser, { link }, idx) => {
   const page = await browser.newPage()
 
-  if (isPostPage(link)) {
-    await parseMedia(page, link); return
-  }
+  await parseCollection(page, link, { courseIdx: idx })
 
-  await parseCollection(page, link)
+  console.log(videos)
 }
 
 /**
@@ -131,9 +143,13 @@ puppeteer.launch(launchParams).then(async (browser) => {
   ])
 
   const coursesEls = await el.$$($courseWrapper)
-  const courses = await Promise.all(coursesEls.map(coursesMapper))
 
-  for (const course of courses) {
-    courseWorker(browser, course)
+  collections = await Promise.all(coursesEls.map(coursesMapper))
+
+  let idx = 0
+
+  for (const course of collections) {
+    courseWorker(browser, course, idx)
+    idx++
   }
 })
