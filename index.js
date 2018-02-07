@@ -21,6 +21,8 @@ const $courseWrapperSelector = '.panel.syllabus, .col-md-8.main-col, .category-l
 const $courseItemsSelector = '.syllabus__item, .panel-body.post-listing, .category-listing'
 const $mediaSelector = ''
 
+const collectionsSelector = "//div/a[@id][text()='View Course'] | //div[@class='category-listing']/a[@id] | //div[@class='post-listings listings']/a[@id]"
+
 /**
  * Launch config
  */
@@ -33,9 +35,10 @@ const userAgents = [
 const windowSize = [WINDOW_WIDTH, WINDOW_HEIGHT]
 const fullURL = `http://www.${DOMAIN}`
 const launchParams = {
+  devtools: true,
   headless: false,
   args: [`--user-agent=${userAgents.join(' ')}`, `--window-size=${windowSize.join(',')}`],
-  slowMo: 10, // slow down by 250ms
+  // slowMo: 10, // slow down by 250ms
 }
 
 /**
@@ -83,32 +86,29 @@ const courseMapper = async (itemEl) => {
 const isPostPage = (link) => link.match(/\/posts\//)
 
 const parseMedia = async (page, link) => {
-  const [media] = await Promise.all([
-    page.waitForSelector($mediaSelector),
-    page.goto(link),
-  ])
+  await page.goto(link)
 }
 
 const parseCollection = async (page, link) => {
-  const [wrapper] = await Promise.all([
-    page.waitForSelector($courseWrapperSelector),
-    page.goto(link),
-  ])
+  await page.goto(link)
+  const collections = await page.$x(collectionsSelector)
+
+  console.log(collections)
 }
 
 // Object.assign(course, {
 //   items: await Promise.all(courseItems.map()),
 // })
 
-const courseWorker = async (browser, course) => {
-  const coursePage = await browser.newPage()
+const courseWorker = async (browser, { link }) => {
+  const page = await browser.newPage()
 
-  if (isPostPage(course.link)) {
-    await parseMedia(coursePage, course.link)
+  if (isPostPage(link)) {
+    await parseMedia(page, link)
+    return
   }
-  else {
-    await parseCollection(coursePage, course.link)
-  }
+
+  await parseCollection(page, link)
 }
 
 /**
@@ -133,6 +133,6 @@ puppeteer.launch(launchParams).then(async (browser) => {
   const courses = await Promise.all(coursesEls.map(coursesMapper))
 
   for (const course of courses) {
-    await courseWorker(browser, course)
+    courseWorker(browser, course)
   }
 })
