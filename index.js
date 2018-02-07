@@ -90,14 +90,17 @@ const parseCollection = async (page, link) => {
   console.log('[COLLECTION]')
   await page.goto(link)
   const collections = await page.$$($courseItemsSelector)
-  const data = await Promise.all(collections.map(collectionsMapper))
+  const urls = await Promise.all(collections.map(collectionsMapper))
 
-  console.log(data)
+  for (const url of urls) {
+    if (isPostPage(url.link)) {
+      await parseMedia(page, url.link)
+    }
+    else {
+      await parseCollection(page, url.link)
+    }
+  }
 }
-
-// Object.assign(course, {
-//   items: await Promise.all(courseItems.map()),
-// })
 
 const courseWorker = async (browser, { link }) => {
   const page = await browser.newPage()
