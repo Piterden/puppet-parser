@@ -3,7 +3,7 @@ const puppeteer = require('puppeteer')
 
 
 /**
- * .env vars
+ * The .env vars
  */
 const { USERNAME, PASSWORD, DOMAIN, WINDOW_HEIGHT, WINDOW_WIDTH } = process.env
 
@@ -13,6 +13,9 @@ const { USERNAME, PASSWORD, DOMAIN, WINDOW_HEIGHT, WINDOW_WIDTH } = process.env
 const $username = '#member_email'
 const $password = '#member_password'
 const $loginButton = '.new_member_session input[type="submit"]'
+const $thumbEl = '.panel--inline .panel__cell:first-of-type img'
+const $titleEl = '.panel--inline .panel__cell:nth-child(2) h4 a'
+const $descriptionEl = '.panel--inline .panel__cell:nth-child(2) p'
 
 /**
  * Launch config
@@ -41,9 +44,9 @@ const launchParams = {
  * @return {{ thumb:string, title:string, link:string, description:string }}
  */
 const collectionsMapper = async (courseEl) => {
-  const thumbEl = await courseEl.$('.panel--inline .panel__cell:first-of-type img')
-  const titleEl = await courseEl.$('.panel--inline .panel__cell:nth-child(2) h4 a')
-  const descriptionEl = await courseEl.$('.panel--inline .panel__cell:nth-child(2) p')
+  const thumbEl = await courseEl.$($thumbEl)
+  const titleEl = await courseEl.$($titleEl)
+  const descriptionEl = await courseEl.$($descriptionEl)
 
   const thumb = await thumbEl.getProperty('src')
   const title = await titleEl.getProperty('innerHTML')
@@ -58,21 +61,28 @@ const collectionsMapper = async (courseEl) => {
   }
 }
 
-puppeteer.launch(launchParams).then(async (browser) => {
-  const pages = await browser.pages()
-  const page = pages[0]
+puppeteer
+  .launch(launchParams)
+  /**
+   * Browser start
+   *
+   * @param {Browser}
+   */
+  .then(async (browser) => {
+    const pages = await browser.pages()
+    const page = pages[0]
 
-  await page.goto(`${fullURL}/login`)
-  await page.type($username, USERNAME, { delay: 2 })
-  await page.type($password, PASSWORD, { delay: 2 })
+    await page.goto(`${fullURL}/login`)
+    await page.type($username, USERNAME, { delay: 2 })
+    await page.type($password, PASSWORD, { delay: 2 })
 
-  const [el] = await Promise.all([
-    page.waitForSelector('[data-section-id="products"]'),
-    page.click($loginButton),
-  ])
+    const [el] = await Promise.all([
+      page.waitForSelector('[data-section-id="products"]'),
+      page.click($loginButton),
+    ])
 
-  const courses = await el.$$('.col-md-12')
-  const collections = await Promise.all(courses.map(collectionsMapper))
+    const courses = await el.$$('.col-md-12')
+    const collections = await Promise.all(courses.map(collectionsMapper))
 
-  console.log(collections)
-})
+    console.log(collections)
+  })
