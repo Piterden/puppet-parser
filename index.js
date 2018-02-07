@@ -51,7 +51,8 @@ const launchConfig = {
  * @return {{ thumb:string, title:string, link:string, description:string }}
  */
 const coursesMapper = async (courseEl) => {
-  console.log(`[COURSES MAPPER]: ${Object.keys(courseEl)}`)
+  // console.log(`[COURSES MAPPER]: ${Object.keys(courseEl)}`)
+
   const thumbEl = await courseEl.$($thumbEl)
   const titleEl = await courseEl.$($titleEl)
   const descriptionEl = await courseEl.$($descriptionEl)
@@ -76,7 +77,7 @@ const coursesMapper = async (courseEl) => {
  * @param {ElementHandle} itemEl
  */
 const collectionsMapper = async (itemEl) => {
-  console.log('[COLLECTIONS MAPPER]')
+  // console.log('[COLLECTIONS MAPPER]')
 
   try {
     const linkEl = await itemEl.$('a,[href]')
@@ -98,7 +99,7 @@ const collectionsMapper = async (itemEl) => {
  * @param {string} link
  * @return {boolean}
  */
-const isPostPage = (link) => link.match(/\/posts\//)
+const isPostPage = (link = '') => link.match(/\/posts\//)
 
 /**
  * Process a post page
@@ -106,10 +107,10 @@ const isPostPage = (link) => link.match(/\/posts\//)
  * @param {Page} page The page instance
  * @param {string} link The next page URL
  */
-const parseMedia = async (page, link) => {
+const parseMedia = async (page, link, { courseIdx }) => {
   const parentLink = await page.url()
 
-  console.log(`[MEDIA PAGE]: ${link}`)
+  console.log(`{{${courseIdx}}} [MEDIA PAGE]: ${link}`)
 
   await page.goto(link)
 
@@ -145,7 +146,7 @@ const parseCollection = async (page, link, { courseIdx, level = 0, childIdx = 0 
 
   for (const url of urls) {
     if (isPostPage(url.link)) {
-      await parseMedia(page, url.link)
+      await parseMedia(page, url.link, { courseIdx })
     }
     else {
       await parseCollection(page, url.link, { courseIdx, level: level + 1 })
