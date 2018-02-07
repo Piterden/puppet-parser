@@ -76,9 +76,10 @@ const coursesMapper = async (courseEl) => {
  * @param {ElementHandle} itemEl
  */
 const collectionsMapper = async (itemEl) => {
-  console.log(`[COLLECTIONS MAPPER]: ${Object.keys(itemEl)}`)
+  console.log('[COLLECTIONS MAPPER]')
+
   try {
-    const linkEl = await itemEl.$('[href]')
+    const linkEl = await itemEl.$('a,[href]')
     const link = await linkEl.getProperty('href')
 
     return { link: await link.jsonValue() }
@@ -106,8 +107,9 @@ const isPostPage = (link) => link.match(/\/posts\//)
  * @param {string} link The next page URL
  */
 const parseMedia = async (page, link) => {
-  console.log(`[MEDIA PAGE]: ${link}`)
   const parentLink = await page.url()
+
+  console.log(`[MEDIA PAGE]: ${link}`)
 
   await page.goto(link)
 
@@ -133,7 +135,8 @@ const parseMedia = async (page, link) => {
  * @param {{courseIdx:number, level:number, childIdx:number}}
  */
 const parseCollection = async (page, link, { courseIdx, level = 0, childIdx = 0 }) => {
-  console.log(`[COLLECTION PAGE]: ${{ courseIdx, level, childIdx }}`)
+  console.log(`{{${courseIdx}}} [COLLECTION PAGE]: ${{ courseIdx, level, childIdx }}`)
+
   await page.goto(link)
   const items = await page.$$($courseItemsSelector)
   const urls = await Promise.all(items.map(collectionsMapper).filter(Boolean))
