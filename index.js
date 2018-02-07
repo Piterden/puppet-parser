@@ -79,10 +79,32 @@ const courseMapper = async (itemEl) => {
   console.log()
 }
 
+const isPostPage = (link) => link.match(/\/posts\//)
+
+const parseMedia = async (page, link) => {
+}
+
+const parseCollection = async (page, link) => {
+  const [wrapper] = await Promise.all([
+    page.waitForSelector($courseWrapperSelector),
+    page.goto(link),
+  ])
+}
 
 // Object.assign(course, {
   //   items: await Promise.all(courseItems.map()),
   // })
+
+const courseWorker = async (browser, course) => {
+  const coursePage = await browser.newPage()
+
+  if (isPostPage(course.link)) {
+    await parseMedia(coursePage, course.link)
+  }
+  else {
+    await parseCollection(coursePage, course.link)
+  }
+}
 
 /**
  * Browser start
@@ -90,16 +112,6 @@ const courseMapper = async (itemEl) => {
  * @param {Browser}
  */
 puppeteer.launch(launchParams).then(async (browser) => {
-  const courseWorker = async (course) => {
-    const coursePage = await browser.newPage()
-
-    const [wrapper] = await Promise.all([
-      coursePage.waitForSelector($courseWrapperSelector),
-      coursePage.goto(course.link),
-    ])
-
-    return wrapper
-  }
 
   const pages = await browser.pages()
   const initPage = pages[0]
@@ -117,8 +129,6 @@ puppeteer.launch(launchParams).then(async (browser) => {
   const courses = await Promise.all(coursesEls.map(coursesMapper))
 
   for (const course of courses) {
-    const wrapper = await courseWorker(course)
-
-    console.log(wrapper)
+    await courseWorker(browser, course)
   }
 })
