@@ -38,12 +38,12 @@ const launchParams = {
 }
 
 /**
- * The mapper method for a collection of collections
+ * The mapper method for the collection of a courses
  *
  * @param {ElementHandle} courseEl
  * @return {{ thumb:string, title:string, link:string, description:string }}
  */
-const collectionsMapper = async (courseEl) => {
+const coursesMapper = async (courseEl) => {
   const thumbEl = await courseEl.$($thumbEl)
   const titleEl = await courseEl.$($titleEl)
   const descriptionEl = await courseEl.$($descriptionEl)
@@ -81,8 +81,14 @@ puppeteer
       page.click($loginButton),
     ])
 
-    const courses = await el.$$('.col-md-12')
-    const collections = await Promise.all(courses.map(collectionsMapper))
+    const coursesEls = await el.$$('.col-md-12')
+    const courses = await Promise.all(coursesEls.map(coursesMapper))
 
-    console.log(collections)
+    console.log(courses)
+
+    courses.forEach(async (course) => {
+      const coursePage = await browser.newPage()
+
+      await coursePage.goto(course.link)
+    })
   })
