@@ -33,50 +33,46 @@ const launchParams = {
   ],
   slowMo: 10, // slow down by 250ms
 }
-// const appid = 'NakMuay'
-// const loginWithCookie = false
-// const collections = []
-// const videos = []
+
+/**
+ * The mapper method for a collection of collections
+ *
+ * @param {ElementHandle} courseEl
+ * @return {{ thumb:string, title:string, link:string, description:string }}
+ */
+const collectionsMapper = async (courseEl) => {
+  const thumbEl = await courseEl.$('.panel--inline .panel__cell:first-of-type img')
+  const titleEl = await courseEl.$('.panel--inline .panel__cell:nth-child(2) h4 a')
+  const descriptionEl = await courseEl.$('.panel--inline .panel__cell:nth-child(2) p')
+
+  const thumb = await thumbEl.getProperty('src')
+  const title = await titleEl.getProperty('innerHTML')
+  const link = await titleEl.getProperty('href')
+  const description = await descriptionEl.getProperty('innerHTML')
+
+  return {
+    thumb: await thumb.jsonValue(),
+    title: await title.jsonValue(),
+    link: await link.jsonValue(),
+    description: await description.jsonValue(),
+  }
+}
 
 puppeteer.launch(launchParams).then(async (browser) => {
   const pages = await browser.pages()
+  const page = pages[0]
 
-  await pages[0].goto(`${fullURL}/login`)
-  await pages[0].type($username, USERNAME, {delay: 2})
-  await pages[0].type($password, PASSWORD, {delay: 2})
-  await pages[0].click($loginButton)
-  await pages[0].waitForNavigation()
+  await page.goto(`${fullURL}/login`)
+  await page.type($username, USERNAME, { delay: 2 })
+  await page.type($password, PASSWORD, { delay: 2 })
+
+  const [el] = await Promise.all([
+    page.waitForSelector('[data-section-id="products"]'),
+    page.click($loginButton),
+  ])
+
+  const courses = await el.$$('.col-md-12')
+  const collections = await Promise.all(courses.map(collectionsMapper))
+
+  console.log(collections)
 })
-// // login by cookies disabled for now
-// if (!loginWithCookie) {
-//   // login by entering login details
-//   console.log('logging in by entering login details')
-// }
-// else {
-//   console.log('logging in by setting cookies')
-//   // login with cookie
-//   page.setCookie({
-//     name: 'cfduid',
-//     value: 'd3efed6f31efa53af6ce7fd89d7399dca1517129585',
-//     domain: `.${domain}`,
-//   })
-
-//   page.setCookie({
-//     name: 'distillery',
-//     value: 'efedf10_a405f072-f85f-4bb5-930f-ecd94b47b566-d7d5ad3da-6d31483bfcd5-dd1e',
-//     domain: `www.${domain}`,
-//   })
-
-//   page.setCookie({
-//     name: '_kjb_session',
-//     value: 'c858bbf764670fef23753dab9f05d6c4',
-//     domain: `www.${domain}`,
-//   })
-// }
-
-// // process main tabs from library page
-// page.goto(`${fullURL}/library`)
-
-// const elements = page.$$('.panel') // <Array<ElementHandle>>
-
-// console.log(`found ${elements.length} main tabs to process`)
