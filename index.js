@@ -21,8 +21,6 @@ const $courseWrapperSelector = '.panel.syllabus, .col-md-8.main-col, .category-l
 const $courseItemsSelector = '.syllabus__item, .panel-body.post-listing, .category-listing'
 const $mediaSelector = ''
 
-const collectionsSelector = "//div/a[@id][text()='View Course'] | //div[@class='category-listing']/a[@id] | //div[@class='post-listings listings']/a[@id]"
-
 /**
  * Launch config
  */
@@ -70,30 +68,31 @@ const coursesMapper = async (courseEl) => {
  *
  * @param {ElementHandle} itemEl
  */
-const courseMapper = async (itemEl) => {
+const collectionsMapper = async (itemEl) => {
   const linkEl = await itemEl.$('a')
   const link = await linkEl.getProperty('href')
-  const href = await link.jsonValue()
 
-  const [innerWrapper] = await Promise.all([
-    coursePage.waitForSelector($courseWrapperSelector),
-    coursePage.goto(href),
-  ])
-
-  console.log()
+  return { link: await link.jsonValue() }
 }
+// const [innerWrapper] = await Promise.all([
+//   coursePage.waitForSelector($courseWrapperSelector),
+//   coursePage.goto(href),
+// ])
 
 const isPostPage = (link) => link.match(/\/posts\//)
 
 const parseMedia = async (page, link) => {
+  console.log('[MEDIA]')
   await page.goto(link)
 }
 
 const parseCollection = async (page, link) => {
+  console.log('[COLLECTION]')
   await page.goto(link)
-  const collections = await page.$x(collectionsSelector)
+  const collections = await page.$$($courseItemsSelector)
+  const data = await Promise.all(collections.map(collectionsMapper))
 
-  console.log(collections)
+  console.log(data)
 }
 
 // Object.assign(course, {
@@ -104,8 +103,7 @@ const courseWorker = async (browser, { link }) => {
   const page = await browser.newPage()
 
   if (isPostPage(link)) {
-    await parseMedia(page, link)
-    return
+    await parseMedia(page, link); return
   }
 
   await parseCollection(page, link)
