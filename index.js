@@ -63,36 +63,39 @@ const coursesMapper = async (courseEl) => {
   }
 }
 
-const courseMapper = async (course) => {
-  const coursePage = await browser.newPage()
-
-  await coursePage.goto(course.link)
-}
-
-puppeteer
-  .launch(launchParams)
+/**
+ * Browser start
+ *
+ * @param {Browser}
+ */
+puppeteer.launch(launchParams).then(async (browser) => {
   /**
-   * Browser start
+   * The worker method for a course page
    *
-   * @param {Browser}
+   * @param {{ thumb:string, title:string, link:string, description:string }} course
    */
-  .then(async (browser) => {
-    const pages = await browser.pages()
-    const page = pages[0]
+  const courseMapper = async (course) => {
+    const coursePage = await browser.newPage()
 
-    await page.goto(`${fullURL}/login`)
-    await page.type($username, USERNAME, { delay: 2 })
-    await page.type($password, PASSWORD, { delay: 2 })
+    await coursePage.goto(course.link)
+  }
 
-    const [el] = await Promise.all([
-      page.waitForSelector($coursesWrapper),
-      page.click($loginButton),
-    ])
+  const pages = await browser.pages()
+  const page = pages[0]
 
-    const coursesEls = await el.$$($courseWrapper)
-    const courses = await Promise.all(coursesEls.map(coursesMapper))
+  await page.goto(`${fullURL}/login`)
+  await page.type($username, USERNAME, { delay: 2 })
+  await page.type($password, PASSWORD, { delay: 2 })
 
-    console.log(courses)
+  const [el] = await Promise.all([
+    page.waitForSelector($coursesWrapper),
+    page.click($loginButton),
+  ])
 
-    courses.forEach(courseMapper)
-  })
+  const coursesEls = await el.$$($courseWrapper)
+  const courses = await Promise.all(coursesEls.map(coursesMapper))
+
+  console.log(courses)
+
+  courses.forEach(courseMapper)
+})
