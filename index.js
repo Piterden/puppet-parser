@@ -73,10 +73,16 @@ const coursesMapper = async (courseEl) => {
  * @param {ElementHandle} itemEl
  */
 const collectionsMapper = async (itemEl) => {
-  const linkEl = await itemEl.$('a')
-  const link = await linkEl.getProperty('href')
+  try {
+    const linkEl = await itemEl.$('[href]')
+    const link = await linkEl.getProperty('href')
 
-  return { link: await link.jsonValue() }
+    return { link: await link.jsonValue() }
+  }
+  catch (error) {
+    console.log(error)
+    return { link: '' }
+  }
 }
 
 const isPostPage = (link) => link.match(/\/posts\//)
@@ -85,9 +91,9 @@ const parseMedia = async (page, link) => {
   const parentLink = await page.url()
 
   await page.goto(link)
+  const titleEl = await page.$('h1,h2')
 
   try {
-    const titleEl = await page.$('h1,h2')
     const title = await titleEl.getProperty('innerHTML')
 
     videos.push({
@@ -97,6 +103,7 @@ const parseMedia = async (page, link) => {
   catch (error) {
     console.log(error)
   }
+
 }
 
 const parseCollection = async (page, link, { courseIdx, level = 0, childIdx = 0 }) => {
