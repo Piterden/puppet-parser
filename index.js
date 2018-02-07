@@ -1,7 +1,6 @@
 require('dotenv').load()
 const puppeteer = require('puppeteer')
 
-
 /**
  * The .env vars
  */
@@ -34,10 +33,7 @@ const windowSize = [WINDOW_WIDTH, WINDOW_HEIGHT]
 const fullURL = `http://www.${DOMAIN}`
 const launchParams = {
   headless: false,
-  args: [
-    `--user-agent=${userAgents.join(' ')}`,
-    `--window-size=${windowSize.join(',')}`,
-  ],
+  args: [`--user-agent=${userAgents.join(' ')}`, `--window-size=${windowSize.join(',')}`],
   slowMo: 10, // slow down by 250ms
 }
 
@@ -70,7 +66,18 @@ const coursesMapper = async (courseEl) => {
  *
  * @param {ElementHandle} itemEl
  */
-const itemsMapper = async (itemEl) => itemEl
+const courseWorker = async (itemEl) => {
+  const linkEl = await itemEl.$('a')
+  const link = await linkEl.getProperty('href')
+  const href = await link.jsonValue()
+
+  const [innerWrapper] = await Promise.all([
+    coursePage.waitForSelector($courseWrapperSelector),
+    coursePage.goto(href),
+  ])
+
+  return {}
+}
 
 /**
  * Browser start
@@ -78,40 +85,23 @@ const itemsMapper = async (itemEl) => itemEl
  * @param {Browser}
  */
 puppeteer.launch(launchParams).then(async (browser) => {
-  /**
-   * The mapper method for a course page
-   *
-   * @param {{ thumb:string, title:string, link:string, description:string }} course
-   */
-  const courseMapper = async (course) => {
-    const coursePage = await browser.newPage()
-
-    const [wrapper] = await Promise.all([
-      coursePage.waitForSelector($courseWrapperSelector),
-      coursePage.goto(course.link),
-    ])
-
-    const courseItems = await wrapper.$$($courseItemsSelector)
-
-    return Object.assign(course, {
-      items: await Promise.all(courseItems.map(itemsMapper)),
-    })
-  }
-
   const pages = await browser.pages()
-  const page = pages[0]
+  const initPage = pages[0]
 
-  await page.goto(`${fullURL}/login`)
-  await page.type($username, USERNAME, { delay: 2 })
-  await page.type($password, PASSWORD, { delay: 2 })
+  await initPage.goto(`${fullURL}/login`)
+  await initPage.type($username, USERNAME, { delay: 2 })
+  await initPage.type($password, PASSWORD, { delay: 2 })
 
   const [el] = await Promise.all([
-    page.waitForSelector($coursesWrapper),
-    page.click($loginButton),
+    initPage.waitForSelector($coursesWrapper),
+    initPage.click($loginButton),
   ])
 
   const coursesEls = await el.$$($courseWrapper)
   const courses = await Promise.all(coursesEls.map(coursesMapper))
 
-  console.log(await Promise.all(courses.map(courseMapper)))
+  for (const course of courses) {
+    await courseWorker(course)
+  }
+  // await Promise.all(courses.forEach())
 })
