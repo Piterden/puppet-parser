@@ -1,20 +1,30 @@
+require('dotenv').load()
 const puppeteer = require('puppeteer')
 
 
+/**
+ * .env vars
+ */
+const { USERNAME, PASSWORD, DOMAIN, WINDOW_HEIGHT, WINDOW_WIDTH } = process.env
+
+/**
+ * Selectors
+ */
 const $username = '#member_email'
 const $password = '#member_password'
 const $loginButton = '.new_member_session input[type="submit"]'
-const username = 'rory@vidapp.com'
-const password = 'Victor1234'
-const domain = 'nakmuaynation.com'
-const fullURL = `http://www.${domain}`
+
+/**
+ * Launch config
+ */
 const userAgents = [
   'Mozilla/5.0 (Windows NT 10.0 Win64 x64)',
   'AppleWebKit/537.36 (KHTML, like Gecko)',
   'Chrome/63.0.3239.132',
   'Safari/537.36',
 ]
-const windowSize = [1600, 900]
+const windowSize = [WINDOW_WIDTH, WINDOW_HEIGHT]
+const fullURL = `http://www.${DOMAIN}`
 const launchParams = {
   headless: false,
   args: [
@@ -32,8 +42,8 @@ puppeteer.launch(launchParams).then(async (browser) => {
   const pages = await browser.pages()
 
   await pages[0].goto(`${fullURL}/login`)
-  await pages[0].type($username, username, {delay: 2})
-  await pages[0].type($password, password, {delay: 2})
+  await pages[0].type($username, USERNAME, {delay: 2})
+  await pages[0].type($password, PASSWORD, {delay: 2})
   await pages[0].click($loginButton)
   await pages[0].waitForNavigation()
 })
