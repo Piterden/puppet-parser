@@ -13,6 +13,8 @@ const { USERNAME, PASSWORD, DOMAIN, WINDOW_HEIGHT, WINDOW_WIDTH } = process.env
 const $username = '#member_email'
 const $password = '#member_password'
 const $loginButton = '.new_member_session input[type="submit"]'
+const $coursesWrapper = '[data-section-id="products"]'
+const $courseWrapper = '.col-md-12'
 const $thumbEl = '.panel--inline .panel__cell:first-of-type img'
 const $titleEl = '.panel--inline .panel__cell:nth-child(2) h4 a'
 const $descriptionEl = '.panel--inline .panel__cell:nth-child(2) p'
@@ -61,6 +63,12 @@ const coursesMapper = async (courseEl) => {
   }
 }
 
+const courseMapper = async (course) => {
+  const coursePage = await browser.newPage()
+
+  await coursePage.goto(course.link)
+}
+
 puppeteer
   .launch(launchParams)
   /**
@@ -77,18 +85,14 @@ puppeteer
     await page.type($password, PASSWORD, { delay: 2 })
 
     const [el] = await Promise.all([
-      page.waitForSelector('[data-section-id="products"]'),
+      page.waitForSelector($coursesWrapper),
       page.click($loginButton),
     ])
 
-    const coursesEls = await el.$$('.col-md-12')
+    const coursesEls = await el.$$($courseWrapper)
     const courses = await Promise.all(coursesEls.map(coursesMapper))
 
     console.log(courses)
 
-    courses.forEach(async (course) => {
-      const coursePage = await browser.newPage()
-
-      await coursePage.goto(course.link)
-    })
+    courses.forEach(courseMapper)
   })
